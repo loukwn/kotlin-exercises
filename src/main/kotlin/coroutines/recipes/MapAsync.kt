@@ -10,7 +10,9 @@ import kotlin.test.assertTrue
 
 suspend fun <T, R> Iterable<T>.mapAsync(
     transformation: suspend (T) -> R
-): List<R> = TODO()
+): List<R> = coroutineScope {
+    this@mapAsync.map { async { transformation(it) } }.awaitAll()
+}
 
 class MapAsyncTest {
     @Test
