@@ -12,7 +12,28 @@ class UserDetailsRepository(
     private val backgroundScope: CoroutineScope,
 ) {
     suspend fun getUserDetails(): UserDetails {
-        TODO()
+        with(backgroundScope) {
+            val userDetails = userDatabase.load()
+            return if (userDetails == null) {
+                val name = async { client.getName() }
+                val friends = async { client.getFriends() }
+                val profile = async { client.getProfile() }
+
+                val fetchedDetails = UserDetails(
+                    name = name.await(),
+                    friends = friends.await(),
+                    profile = profile.await(),
+                )
+
+                launch {
+                    userDatabase.save(fetchedDetails)
+                }
+
+                fetchedDetails
+            } else {
+                userDetails
+            }
+        }
     }
 }
 
