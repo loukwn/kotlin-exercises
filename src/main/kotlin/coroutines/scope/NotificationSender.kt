@@ -10,14 +10,21 @@ class NotificationSender(
     private val exceptionCollector: ExceptionCollector,
     dispatcher: CoroutineDispatcher,
 ) {
-    val scope: CoroutineScope = TODO()
+    private val exceptionHandler = CoroutineExceptionHandler { _, t ->
+        exceptionCollector.collectException(t)
+    }
+    val scope: CoroutineScope = CoroutineScope(SupervisorJob() + exceptionHandler + dispatcher)
 
     fun sendNotifications(notifications: List<Notification>) {
-        // TODO
+        notifications.forEach {
+            scope.launch {
+                client.send(it)
+            }
+        }
     }
 
     fun cancel() {
-        // TODO
+        scope.coroutineContext.cancelChildren()
     }
 }
 
